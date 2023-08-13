@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"target": "ES2016",
+		"lib": ["DOM", "ESNext"],
+		"module": "ESNext",
+		"noEmit": false,
+		"moduleResolution": "node",
+		"outDir": "dist",
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"isolatedModules": true,
+		"strict": true,
+		"allowUnreachableCode": false,
+		"skipLibCheck": true,
+		"jsx": "preserve",
+		"jsxFactory": "factory",
+		"jsxImportSource": "@v8tenko/re-html"
+	},
+	"include": ["src"],
+	"ts-node": {
+		"esm": true
+	}
+}
