@@ -1,14 +1,20 @@
-import { array } from '../utils';
+import { Nullable, array } from '../utils';
 
 import { Node } from './base';
-import { ComponentNode } from './component/component';
+import { ComponentNode } from './component';
 import { PrimitiveNode } from './primitive';
-import { PureNode } from './pure/pure';
-import { NodeProps, SynteticProps, SynteticPropsList } from './typings';
+import { PureNode } from './pure';
+import {
+	MoveSynteticPropSymbol,
+	NodeProps,
+	ReHTMLProps,
+	SynteticProps,
+	SynteticPropsSpace
+} from './typings';
 
 const AvailableNodes = [PrimitiveNode] as const;
 
-const applyCustomNodes = (collection: unknown[], variants = AvailableNodes): Node[] => {
+const applyCustomNodes = (collection: unknown[], variants = AvailableNodes): Nullable<Node>[] => {
 	const mapped = collection.map((node) => {
 		if (Node.is(node)) {
 			return node;
@@ -17,34 +23,54 @@ const applyCustomNodes = (collection: unknown[], variants = AvailableNodes): Nod
 		const constructor = variants.find((Class) => Class.matches(node));
 
 		if (!constructor) {
-			return false;
+			return undefined;
 		}
 
 		return new constructor(node as any);
-	}) as Node[];
+	}) as Nullable<Node>[];
 
-	return mapped.filter(Boolean);
+	return mapped;
 };
 
-const extractSynteticProps = (props: NodeProps): Partial<SynteticProps> => {
-	const foundSynteticProps: Partial<SynteticProps> = {};
+type MapResult = {
+	props: NodeProps;
+} & SynteticProps;
 
-	SynteticPropsList.forEach((key) => {
-		if (Object.hasOwn(props, key)) {
-			foundSynteticProps[key] = props[key];
+// @todo fix ts typings
+const mapReHTMLPropsToNodeProps = (props: ReHTMLProps): MapResult => {
+	const syntetic: SynteticProps = {};
+	const nodeProps: NodeProps = {};
 
-			delete props[key];
+	Object.keys(props).forEach((key) => {
+		if (!Object.hasOwn(SynteticPropsSpace, key)) {
+			// @ts-ignore
+			nodeProps[key.toLocaleLowerCase()] = props[key];
+
+			return;
 		}
+
+		if (SynteticPropsSpace[key] === MoveSynteticPropSymbol) {
+			// @ts-ignore
+			syntetic[key] = props[key];
+
+			return;
+		}
+
+		// @ts-ignore
+		nodeProps[key] = props[key];
 	});
 
-	return foundSynteticProps;
+	return {
+		...syntetic,
+		props: nodeProps
+	};
 };
 
 export const factory = (
 	tagOrConstructor: string | ReHTML.Component,
-	props: NodeProps = {}
+	reHTMLProps: ReHTMLProps = {}
 ): Node => {
-	const { children } = extractSynteticProps(props);
+	const { children, props } = mapReHTMLPropsToNodeProps(reHTMLProps);
 	const nodes = applyCustomNodes(array(children || []));
 
 	if (typeof tagOrConstructor === 'string') {

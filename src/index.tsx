@@ -1,18 +1,25 @@
 import { render } from '@v8tenko/re-html';
+import { useState } from '@v8tenko/re-html/state/hooks';
 
 const P: ReHTML.Component<{ value: number }> = ({ value }) => {
+	const [a, setA] = useState(10);
+
 	return (
 		<div>
 			<p>hello</p>
-			<b>{value}</b>
+			<b>{value + a}</b>
 			<p>world</p>
+			<button onClick={() => setA((old) => old + 1)}>click in P</button>
 		</div>
 	);
 };
 
 const App: ReHTML.Component = () => {
+	const [value, setValue] = useState(1);
+
 	return (
 		<p>
+			{value % 2 === 0 && <P value={value} />}
 			<div>hello, world</div>
 			<p>222</p>
 			<ul>
@@ -20,9 +27,9 @@ const App: ReHTML.Component = () => {
 				<li>2</li>
 				<li>3</li>
 			</ul>
-			<P value={1} />
-			<P value={2} />
-			<button onClick={() => alert(1)}>click</button>
+			<P value={value} />
+			<P value={value} />
+			<button onClick={() => setValue((old) => old + 1)}>click</button>
 		</p>
 	);
 };

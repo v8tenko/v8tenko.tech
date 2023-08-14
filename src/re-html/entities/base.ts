@@ -1,4 +1,4 @@
-import { Nullable } from '../utils/nullable';
+import { Nullable, isNull } from '../utils/nullable';
 
 export abstract class Node<T = unknown> {
 	static readonly type: Symbol;
@@ -10,6 +10,19 @@ export abstract class Node<T = unknown> {
 
 	static matches(target: unknown): target is unknown {
 		throw new Error('Base node does not matches anything.');
+	}
+
+	patch(next: Nullable<Node>) {
+		if (isNull(next)) {
+			this.unmount();
+
+			return;
+		}
+
+		const nextTarget = next.mount();
+
+		this.target?.replaceWith(nextTarget);
+		this.target = nextTarget;
 	}
 
 	abstract render(): T;

@@ -7,9 +7,9 @@ type Primitive = string | number | true;
 
 export class PrimitiveNode extends Node<Primitive> {
 	static type = Types.primitive;
-	protected target: Nullable<Text>;
 
-	private value: Primitive;
+	protected target: Nullable<Text>;
+	protected value: Primitive;
 
 	static is(target: unknown): target is PrimitiveNode {
 		return target instanceof PrimitiveNode;
@@ -32,6 +32,18 @@ export class PrimitiveNode extends Node<Primitive> {
 	constructor(value: Primitive) {
 		super();
 		this.value = value;
+	}
+
+	patch(next: Nullable<Node<unknown>>): void {
+		if (!PrimitiveNode.is(next)) {
+			super.patch(next);
+
+			return;
+		}
+
+		if (this.value !== next.value) {
+			super.patch(next);
+		}
 	}
 
 	render(): Primitive {

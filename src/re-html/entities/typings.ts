@@ -14,11 +14,26 @@ export const Types = {
 
 export type Type = keyof typeof Types;
 
-export const SynteticPropsList = ['children'] as const;
+export const MoveSynteticPropSymbol = Symbol.for('prop.move');
 
-export type SynteticProps = {
-	children: Node[];
+export const SynteticPropsSpace: Record<string, Symbol | string> = {
+	children: MoveSynteticPropSymbol,
+	className: 'class'
 };
 
-export type NodeProps = Partial<HTMLElement & SynteticProps>;
+export type SynteticProps = Partial<{
+	children: Node[];
+}>;
+
+export type NodeProps = Partial<HTMLElement>;
 export type NodeProp = keyof NodeProps;
+
+type MapNodePropToReHTMLProp<T extends string> = T extends `on${infer U}`
+	? `on${Capitalize<U>}`
+	: T;
+
+export type ReHTMLProps = Partial<
+	{
+		[key in NodeProp as MapNodePropToReHTMLProp<key>]: NodeProps[key];
+	} & SynteticProps
+>;
