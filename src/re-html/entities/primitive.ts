@@ -8,7 +8,7 @@ type Primitive = string | number | true;
 export class PrimitiveNode extends Node<Primitive> {
 	static type = Types.primitive;
 
-	protected target: Nullable<Text>;
+	target: Nullable<Text>;
 	protected value: Primitive;
 
 	static is(target: unknown): target is PrimitiveNode {
@@ -22,7 +22,6 @@ export class PrimitiveNode extends Node<Primitive> {
 
 		const conditions = [
 			target !== false,
-			target !== 0,
 			typeof target === 'string' || typeof target === 'number'
 		];
 
@@ -40,6 +39,8 @@ export class PrimitiveNode extends Node<Primitive> {
 
 			return;
 		}
+
+		next.target = this.target;
 
 		if (this.value !== next.value) {
 			super.patch(next);

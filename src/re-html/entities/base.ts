@@ -2,7 +2,7 @@ import { Nullable, isNull } from '../utils/nullable';
 
 export abstract class Node<T = unknown> {
 	static readonly type: Symbol;
-	protected abstract target: Nullable<Text | HTMLElement>;
+	abstract target: Nullable<Text | HTMLElement>;
 
 	static is(target: unknown): target is Node {
 		return target instanceof Node;
@@ -19,10 +19,7 @@ export abstract class Node<T = unknown> {
 			return;
 		}
 
-		const nextTarget = next.mount();
-
-		this.target?.replaceWith(nextTarget);
-		this.target = nextTarget;
+		this.target?.replaceWith(next.mount());
 	}
 
 	abstract render(): T;

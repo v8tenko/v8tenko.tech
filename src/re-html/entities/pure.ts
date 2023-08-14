@@ -12,7 +12,7 @@ type VirtualPureNode = {
 
 export class PureNode extends Node<VirtualPureNode> {
 	static type = Types.pure;
-	protected target: Nullable<HTMLElement> = null;
+	target: Nullable<HTMLElement> = null;
 
 	protected tag: string;
 	protected children: Nullable<Node>[];

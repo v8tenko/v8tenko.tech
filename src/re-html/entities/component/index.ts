@@ -26,6 +26,8 @@ export class ComponentNode<T extends Object = {}>
 			this.componentWillCreate();
 			const node = factory(this.props);
 
+			node.target = this.target;
+
 			this.componentDidCreate();
 
 			return node;
@@ -53,7 +55,6 @@ export class ComponentNode<T extends Object = {}>
 
 	componentDidCreate(): void {
 		state.allHookRunned(this.id!);
-		console.log(this);
 	}
 
 	render(): unknown {

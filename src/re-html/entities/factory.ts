@@ -1,4 +1,4 @@
-import { Nullable, array } from '../utils';
+import { Nullable, array, isNotNull } from '../utils';
 
 import { Node } from './base';
 import { ComponentNode } from './component';
@@ -71,7 +71,7 @@ export const factory = (
 	reHTMLProps: ReHTMLProps = {}
 ): Node => {
 	const { children, props } = mapReHTMLPropsToNodeProps(reHTMLProps);
-	const nodes = applyCustomNodes(array(children || []));
+	const nodes = applyCustomNodes(array(isNotNull(children) ? children : []));
 
 	if (typeof tagOrConstructor === 'string') {
 		return new PureNode(tagOrConstructor, nodes, props);

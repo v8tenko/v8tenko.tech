@@ -2,7 +2,7 @@ import { render } from '@v8tenko/re-html';
 import { useState } from '@v8tenko/re-html/state/hooks';
 
 const P: ReHTML.Component<{ value: number }> = ({ value }) => {
-	const [a, setA] = useState(10);
+	const [a, setA] = useState(0);
 
 	return (
 		<div>
@@ -14,23 +14,33 @@ const P: ReHTML.Component<{ value: number }> = ({ value }) => {
 	);
 };
 
+const P2: ReHTML.Component<{ value: number }> = ({ value }) => {
+	const [a, setA] = useState(100);
+
+	return (
+		<div>
+			<b>{value + a}</b>
+			<button onClick={() => setA((old) => old + 1)}>click in P2</button>
+			<div>
+				P section
+				<P value={value} />
+			</div>
+		</div>
+	);
+};
+
 const App: ReHTML.Component = () => {
 	const [value, setValue] = useState(1);
 
 	return (
-		<p>
+		<div>
 			{value % 2 === 0 && <P value={value} />}
-			<div>hello, world</div>
-			<p>222</p>
-			<ul>
-				<li>1</li>
-				<li>2</li>
-				<li>3</li>
-			</ul>
 			<P value={value} />
 			<P value={value} />
-			<button onClick={() => setValue((old) => old + 1)}>click</button>
-		</p>
+			<button onClick={() => setValue((old) => old + 1)}>inc</button>
+			<button onClick={() => setValue((old) => old - 1)}>dec</button>
+			<P2 value={value} />
+		</div>
 	);
 };
 
