@@ -1,7 +1,6 @@
 import './jsx-runtime';
 
-import { render } from './dom/render';
-import { factory } from './entities/factory';
+export { render, renderToString } from './dom/render';
+export { factory } from './entities/factory';
 
-export { render, factory };
-export default { render, factory };
+export { useState } from './state/hooks';

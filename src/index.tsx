@@ -1,5 +1,4 @@
-import { render } from '@v8tenko/re-html';
-import { useState } from '@v8tenko/re-html/state/hooks';
+import { render, renderToString, useState } from '@v8tenko/re-html';
 
 const P: ReHTML.Component<{ value: number }> = ({ value }) => {
 	const [a, setA] = useState(0);
@@ -14,33 +13,54 @@ const P: ReHTML.Component<{ value: number }> = ({ value }) => {
 	);
 };
 
-const P2: ReHTML.Component<{ value: number }> = ({ value }) => {
-	const [a, setA] = useState(100);
+const Fragment: ReHTML.Component = () => {
+	return <>test</>;
+};
+
+// eslint-disable-next-line no-unused-vars
+const ConditionalRender: ReHTML.Component = () => {
+	const [value, setValue] = useState(1);
 
 	return (
-		<div>
-			<b>{value + a}</b>
-			<button onClick={() => setA((old) => old + 1)}>click in P2</button>
-			<div>
-				P section
-				<P value={value} />
-			</div>
-		</div>
+		<>
+			{value % 2 === 0 && <p>help me start</p>}
+			{value % 2 === 1 && <p>help me start 2</p>}
+			<P value={value} />
+			<button onClick={() => setValue((old) => old + 1)}>inc</button>
+			{new Array(5).fill(0).map((_, i) => {
+				return <p>{i}</p>;
+			})}
+			{value % 2 === 0 && <p>help me start middle</p>}
+			{value % 2 === 1 && <p>help me start middle 2</p>}
+			{new Array(6).fill(0).map((_, i) => {
+				return <p>{i}</p>;
+			})}
+			{value % 2 === 0 && <p>help me 1</p>}
+			{value % 2 === 1 && <p>help me 2</p>}
+			{value % 2 === 0 && <p>help me 3</p>}
+			{value % 2 === 1 && <p>help me 4</p>}
+		</>
 	);
 };
 
 const App: ReHTML.Component = () => {
-	const [value, setValue] = useState(1);
+	const [value, setValue] = useState(5);
 
 	return (
-		<div>
-			{value % 2 === 0 && <P value={value} />}
-			<P value={value} />
-			<P value={value} />
+		<>
+			{new Array(value).fill(0).map((_, el) => {
+				return el % 2 === value % 2 && <p>{el}</p>;
+			})}
+			<p>hello</p>
 			<button onClick={() => setValue((old) => old + 1)}>inc</button>
-			<button onClick={() => setValue((old) => old - 1)}>dec</button>
-			<P2 value={value} />
-		</div>
+			<>test</>
+			<p>prikol</p>
+			{new Array(value).fill(0).map((_, el) => {
+				return el % 2 === value % 2 && <p>{el}</p>;
+			})}
+			<Fragment />
+			<ConditionalRender />
+		</>
 	);
 };
 

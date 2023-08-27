@@ -62,7 +62,7 @@ export class PureNode extends Node<VirtualPureNode> {
 		target.setAttribute(key, `${this.props[key]}`);
 	}
 
-	protected applyNewProps(next: PureNode) {
+	protected applyNextProps(next: PureNode) {
 		next.keys.forEach((key) => {
 			if (Object.hasOwn(this.props, key)) {
 				if (key.startsWith('on')) {
@@ -83,15 +83,11 @@ export class PureNode extends Node<VirtualPureNode> {
 		});
 	}
 
-	protected patchChildren(next: PureNode) {
+	protected applyNextChildren(next: PureNode) {
 		let renderedCount = 0;
 
 		this.children.forEach((child, i) => {
 			const nextChild = next.children[i];
-
-			if (isNotNull(nextChild)) {
-				renderedCount++;
-			}
 
 			if (isNotNull(child)) {
 				if (
@@ -102,20 +98,33 @@ export class PureNode extends Node<VirtualPureNode> {
 					nextChild.restore(child);
 					nextChild.render();
 
+					renderedCount += nextChild.size;
+
 					return;
 				}
 
-				child.patch(nextChild);
+				child.patch(nextChild, { parent: this.target!, startIndex: renderedCount });
+
+				renderedCount += nextChild?.size ?? 0;
 
 				return;
 			}
 
-			if (isNull(child) && isNotNull(nextChild)) {
-				this.target?.insertBefore(
-					nextChild.mount(),
-					this.target.childNodes[renderedCount - 1]
-				);
+			if (isNotNull(nextChild)) {
+				const childAfter = this.target!.childNodes[renderedCount];
+
+				this.target!.insertBefore(nextChild.mount(), childAfter);
+
+				renderedCount += nextChild.size;
 			}
+		});
+
+		next.children.slice(this.children.length).forEach((node) => {
+			if (!node) {
+				return;
+			}
+
+			this.target?.appendChild(node.mount());
 		});
 	}
 
@@ -134,8 +143,8 @@ export class PureNode extends Node<VirtualPureNode> {
 
 		next.target = this.target;
 
-		this.applyNewProps(next);
-		this.patchChildren(next);
+		this.applyNextProps(next);
+		this.applyNextChildren(next);
 	}
 
 	mount(): HTMLElement {

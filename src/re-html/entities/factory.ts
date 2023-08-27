@@ -2,17 +2,18 @@ import { Nullable, array, isNotNull } from '../utils';
 
 import { Node } from './base';
 import { ComponentNode } from './component';
-import { PrimitiveNode } from './primitive';
+import { PrimitiveNode, CollectionNode, FragmentNode } from './custom';
 import { PureNode } from './pure';
 import {
 	MoveSynteticPropSymbol,
 	NodeProps,
 	ReHTMLProps,
 	SynteticProps,
-	SynteticPropsSpace
+	SynteticPropsSpace,
+	Types
 } from './typings';
 
-const AvailableNodes = [PrimitiveNode] as const;
+const AvailableNodes = [PrimitiveNode, CollectionNode] as const;
 
 const applyCustomNodes = (collection: unknown[], variants = AvailableNodes): Nullable<Node>[] => {
 	const mapped = collection.map((node) => {
@@ -67,7 +68,7 @@ const mapReHTMLPropsToNodeProps = (props: ReHTMLProps): MapResult => {
 };
 
 export const factory = (
-	tagOrConstructor: string | ReHTML.Component,
+	tagOrConstructor: string | Symbol | ReHTML.Component,
 	reHTMLProps: ReHTMLProps = {}
 ): Node => {
 	const { children, props } = mapReHTMLPropsToNodeProps(reHTMLProps);
@@ -79,6 +80,10 @@ export const factory = (
 
 	if (typeof tagOrConstructor === 'function') {
 		return new ComponentNode(tagOrConstructor, props);
+	}
+
+	if (tagOrConstructor === Types.fragment) {
+		return new FragmentNode(nodes);
 	}
 
 	throw new Error(`There is no Node for type ${typeof tagOrConstructor}`);

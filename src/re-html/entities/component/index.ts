@@ -1,7 +1,8 @@
 import state from '../../state';
 import { Nullable, isNotNull, isNull } from '../../utils/nullable';
 import { Node } from '../base';
-import { SynteticProps } from '../typings';
+import { FragmentNode } from '../custom';
+import { DOMNode, SynteticProps } from '../typings';
 
 import { ComponentLifecycle } from './lifecycle';
 
@@ -9,7 +10,7 @@ export class ComponentNode<T extends Object = {}>
 	extends Node<unknown>
 	implements ComponentLifecycle
 {
-	target: Nullable<Text | HTMLElement>;
+	target: Nullable<DOMNode>;
 	props: T;
 
 	protected id: Nullable<number>;
@@ -41,8 +42,11 @@ export class ComponentNode<T extends Object = {}>
 	restore(from: ComponentNode) {
 		this.node = from.node;
 		this.target = from.target;
-		this.target = from.target;
 		this.id = from.id;
+	}
+
+	isFragment() {
+		return FragmentNode.is(this.node);
 	}
 
 	isTheSameComponent(target: ComponentNode) {
@@ -57,6 +61,12 @@ export class ComponentNode<T extends Object = {}>
 		state.allHookRunned(this.id!);
 	}
 
+	componentDidMount(): void {
+		if (FragmentNode.is(this.node)) {
+			this.node.target = this.target;
+		}
+	}
+
 	render(): unknown {
 		if (isNull(this.node)) {
 			throw new Error('Unable to render node before first mount');
@@ -64,13 +74,13 @@ export class ComponentNode<T extends Object = {}>
 
 		const next = this.build({});
 
-		this.node.patch(next);
+		this.node.patch(next, { parent: this.target! as HTMLElement, startIndex: 0 });
 		this.node = next;
 
 		return this.node.render();
 	}
 
-	mount(): Text | HTMLElement {
+	mount(): DOMNode {
 		if (isNotNull(this.node)) {
 			throw new Error('Unable to call mount second time. Use render insted');
 		}
@@ -89,7 +99,7 @@ export class ComponentNode<T extends Object = {}>
 
 	unmount(): void {
 		this.componentWillUnmount();
-		this.target?.remove();
+		this.node?.unmount();
 	}
 }
 

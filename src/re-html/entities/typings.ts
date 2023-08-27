@@ -9,7 +9,9 @@ export const Types = {
 	 */
 	primitive: Symbol.for('type.primitive'),
 	/** const Component = () => <p> content </p> */
-	compoment: Symbol.for('type.component')
+	compoment: Symbol.for('type.component'),
+	fragment: Symbol.for('type.fragment'),
+	list: Symbol.for('type.list')
 } as const;
 
 export type Type = keyof typeof Types;
@@ -32,8 +34,11 @@ type MapNodePropToReHTMLProp<T extends string> = T extends `on${infer U}`
 	? `on${Capitalize<U>}`
 	: T;
 
+// @todo replace with map
 export type ReHTMLProps = Partial<
 	{
 		[key in NodeProp as MapNodePropToReHTMLProp<key>]: NodeProps[key];
 	} & SynteticProps
 >;
+
+export type DOMNode = HTMLElement | Text;
