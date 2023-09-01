@@ -8,6 +8,7 @@ export default ({ mode = 'development' }) => ({
 	mode,
 	entry: './src/index.tsx',
     devtool: 'source-map',
+	context: path.resolve(__dirname, 'src'),
 	output: {
 		path: path.resolve(__dirname, 'dist'),
 		filename: 'bundle.js',

@@ -1,16 +1,18 @@
 import { Falsey, Nullable, isNull } from '../utils/nullable';
 
-import { DOMNode } from './typings';
+import { DOMElement } from './typings';
 
 export type PatchContext = {
-	parent: HTMLElement;
-	startIndex: number;
+	parent: Nullable<HTMLElement>;
+	elementBefore: Nullable<DOMElement>;
 };
 
-export abstract class Node<T = unknown> {
+export abstract class Node {
 	static readonly type: Symbol;
-	abstract target: Nullable<DOMNode>;
-	size: number = 1;
+	abstract target: Nullable<DOMElement>;
+
+	parent: Nullable<Node>;
+	elementBefore: Nullable<DOMElement>;
 
 	static is(target: unknown): target is Node {
 		return target instanceof Node;
@@ -32,24 +34,13 @@ export abstract class Node<T = unknown> {
 			throw new Error('Unable to patch nullable Node');
 		}
 
-		this.target.replaceWith(next.mount());
+		this.target.replaceWith(next.mount(null));
 	}
-
-	/**
-	 * called after state changed
-	 * implements step-by-stem architecture:
-	 * 	1. Got compoment to rerender
-	 * 	2. Call State.componentWillMount to get actual hook state of component
-	 * 	3. Running factory with new props / hooks state
-	 * 	4. Iterating overs it's children and patching them
-	 * 	5. If we find a new component - repeat this
-	 */
-	abstract render(): T;
 
 	/**
 	 * first render only
 	 * creates initial DOM, linking hooks
 	 */
-	abstract mount(): DOMNode;
+	abstract mount(at: Nullable<HTMLElement>): DOMElement;
 	abstract unmount(): void;
 }

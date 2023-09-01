@@ -2,15 +2,13 @@ import state from '../../state';
 import { Nullable, isNotNull, isNull } from '../../utils/nullable';
 import { Node } from '../base';
 import { FragmentNode } from '../custom';
-import { DOMNode, SynteticProps } from '../typings';
+import { DOMElement, SynteticProps } from '../typings';
 
 import { ComponentLifecycle } from './lifecycle';
 
-export class ComponentNode<T extends Object = {}>
-	extends Node<unknown>
-	implements ComponentLifecycle
-{
-	target: Nullable<DOMNode>;
+export class ComponentNode<T extends Object = {}> extends Node implements ComponentLifecycle {
+	target: Nullable<DOMElement>;
+	position: Nullable<number>;
 	props: T;
 
 	protected id: Nullable<number>;
@@ -45,8 +43,10 @@ export class ComponentNode<T extends Object = {}>
 		this.id = from.id;
 	}
 
-	isFragment() {
-		return FragmentNode.is(this.node);
+	shareTarget(target: DOMElement) {
+		if (FragmentNode.is(this.node)) {
+			this.node.target = target;
+		}
 	}
 
 	isTheSameComponent(target: ComponentNode) {
@@ -54,43 +54,50 @@ export class ComponentNode<T extends Object = {}>
 	}
 
 	componentWillCreate(): void {
-		this.id = state.registerComponent(this.id, this.render.bind(this));
+		this.id = state.registerComponent(this.id, this.commit.bind(this));
 	}
 
 	componentDidCreate(): void {
 		state.allHookRunned(this.id!);
 	}
 
-	componentDidMount(): void {
-		if (FragmentNode.is(this.node)) {
-			this.node.target = this.target;
-		}
-	}
-
-	render(): unknown {
+	commit() {
 		if (isNull(this.node)) {
 			throw new Error('Unable to render node before first mount');
 		}
 
 		const next = this.build({});
+		const context = {
+			parent: this.target! as HTMLElement,
+			elementBefore: this.elementBefore
+		};
 
-		this.node.patch(next, { parent: this.target! as HTMLElement, startIndex: 0 });
+		this.node.patch(next, context);
+
 		this.node = next;
-
-		return this.node.render();
 	}
 
-	mount(): DOMNode {
+	componentDidMount(): void {
+		console.log(this, 'has been mount');
+	}
+
+	mount(at: Nullable<HTMLElement>): DOMElement {
 		if (isNotNull(this.node)) {
 			throw new Error('Unable to call mount second time. Use render insted');
 		}
 
 		const node = this.build({});
 
+		node.elementBefore = this.elementBefore;
 		this.node = node;
-		this.target = node.mount();
 
-		return this.target;
+		const parent = FragmentNode.is(node) ? at : (this.node.target as HTMLElement);
+		const result = node.mount(parent);
+
+		this.target = parent;
+		this.componentDidMount();
+
+		return result;
 	}
 
 	componentWillUnmount(): void {
@@ -105,8 +112,6 @@ export class ComponentNode<T extends Object = {}>
 
 declare global {
 	export namespace ReHTML {
-		export type Component<Props extends Object = {}> = (
-			props: Props & SynteticProps
-		) => Node<unknown>;
+		export type Component<Props extends Object = {}> = (props: Props & SynteticProps) => Node;
 	}
 }

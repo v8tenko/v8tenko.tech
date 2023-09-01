@@ -4,7 +4,7 @@ import { Types } from '../typings';
 
 type Primitive = string | number | true;
 
-export class PrimitiveNode extends Node<Primitive> {
+export class PrimitiveNode extends Node {
 	static type = Types.primitive;
 
 	target: Nullable<Text>;
@@ -42,7 +42,7 @@ export class PrimitiveNode extends Node<Primitive> {
 		this.value = value;
 	}
 
-	patch(next: Nullable<Node<unknown>>): void {
+	patch(next: Node): void {
 		if (!PrimitiveNode.is(next)) {
 			super.patch(next);
 
@@ -54,10 +54,6 @@ export class PrimitiveNode extends Node<Primitive> {
 		if (this.value !== next.value) {
 			super.patch(next);
 		}
-	}
-
-	render(): Primitive {
-		return this.value;
 	}
 
 	mount(): Text {

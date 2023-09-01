@@ -1,4 +1,4 @@
-import { render, renderToString, useState } from '@v8tenko/re-html';
+import { render, useState } from '@v8tenko/re-html';
 
 const P: ReHTML.Component<{ value: number }> = ({ value }) => {
 	const [a, setA] = useState(0);
@@ -19,11 +19,11 @@ const Fragment: ReHTML.Component = () => {
 
 // eslint-disable-next-line no-unused-vars
 const ConditionalRender: ReHTML.Component = () => {
-	const [value, setValue] = useState(1);
+	const [value, setValue] = useState(2);
 
 	return (
 		<>
-			{value % 2 === 0 && <p>help me start</p>}
+			{value % 2 === 0 && <P value={value} />}
 			{value % 2 === 1 && <p>help me start 2</p>}
 			<P value={value} />
 			<button onClick={() => setValue((old) => old + 1)}>inc</button>
@@ -53,13 +53,13 @@ const App: ReHTML.Component = () => {
 			})}
 			<p>hello</p>
 			<button onClick={() => setValue((old) => old + 1)}>inc</button>
-			<>test</>
+			<>{value % 2 === 0 && <P value={value} />}</>
 			<p>prikol</p>
 			{new Array(value).fill(0).map((_, el) => {
 				return el % 2 === value % 2 && <p>{el}</p>;
 			})}
-			<Fragment />
 			<ConditionalRender />
+			<Fragment />
 		</>
 	);
 };

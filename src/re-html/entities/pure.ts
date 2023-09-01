@@ -1,49 +1,34 @@
-import { Nullable, isNotNull, isNull } from '../utils/nullable';
+import { Falsey, Nullable } from '../utils/nullable';
 
 import { Node } from './base';
-import { ComponentNode } from './component';
+import { naivePatcher } from './patcher';
 import { NodeProp, NodeProps, Types } from './typings';
+import { DOM } from './utils';
 
-type VirtualPureNode = {
-	tag: string;
-	children: Nullable<Node>[];
-	props: NodeProps;
-};
-
-export class PureNode extends Node<VirtualPureNode> {
+export class PureNode extends Node {
 	static type = Types.pure;
-	target: Nullable<HTMLElement> = null;
+	target: Nullable<HTMLElement>;
 
-	protected tag: string;
-	protected children: Nullable<Node>[];
-	protected props: NodeProps;
+	tag: string;
+	children: Falsey<Node>[];
+	props: NodeProps;
 
 	static is(target: unknown): target is PureNode {
-		if (isNull(target)) {
-			return false;
-		}
-
-		if (typeof target !== 'object') {
-			return false;
-		}
-
 		return target instanceof PureNode;
 	}
 
-	constructor(type: string, children: Nullable<Node>[], props: NodeProps) {
+	constructor(type: string, children: Falsey<Node>[], props: NodeProps) {
 		super();
 
 		this.tag = type;
 		this.children = children;
 		this.props = props;
-	}
 
-	render(): VirtualPureNode {
-		return {
-			tag: this.tag,
-			children: this.children,
-			props: this.props
-		};
+		this.children.forEach((node) => {
+			if (Node.is(node)) {
+				node.parent = this;
+			}
+		});
 	}
 
 	protected get keys(): NodeProp[] {
@@ -83,52 +68,7 @@ export class PureNode extends Node<VirtualPureNode> {
 		});
 	}
 
-	protected applyNextChildren(next: PureNode) {
-		let renderedCount = 0;
-
-		this.children.forEach((child, i) => {
-			const nextChild = next.children[i];
-
-			if (isNotNull(child)) {
-				if (
-					ComponentNode.is(child) &&
-					ComponentNode.is(nextChild) &&
-					child.isTheSameComponent(nextChild)
-				) {
-					nextChild.restore(child);
-					nextChild.render();
-
-					renderedCount += nextChild.size;
-
-					return;
-				}
-
-				child.patch(nextChild, { parent: this.target!, startIndex: renderedCount });
-
-				renderedCount += nextChild?.size ?? 0;
-
-				return;
-			}
-
-			if (isNotNull(nextChild)) {
-				const childAfter = this.target!.childNodes[renderedCount];
-
-				this.target!.insertBefore(nextChild.mount(), childAfter);
-
-				renderedCount += nextChild.size;
-			}
-		});
-
-		next.children.slice(this.children.length).forEach((node) => {
-			if (!node) {
-				return;
-			}
-
-			this.target?.appendChild(node.mount());
-		});
-	}
-
-	patch(next: Node<unknown>): void {
+	patch(next: Node): void {
 		if (!PureNode.is(next)) {
 			super.patch(next);
 
@@ -144,25 +84,34 @@ export class PureNode extends Node<VirtualPureNode> {
 		next.target = this.target;
 
 		this.applyNextProps(next);
-		this.applyNextChildren(next);
+
+		const context = {
+			parent: this.target,
+			elementBefore: this.elementBefore
+		};
+
+		naivePatcher(this, next, context);
 	}
 
 	mount(): HTMLElement {
 		const element = document.createElement(this.tag);
+
+		this.target = element;
 
 		this.keys.forEach((key) => {
 			this.handleProp(element, key);
 		});
 
 		this.children.forEach((node) => {
-			if (isNull(node)) {
+			if (!Node.is(node)) {
 				return;
 			}
 
-			element.appendChild(node.mount());
+			DOM.append(element, node, {
+				parent: element,
+				elementBefore: element.lastChild as Nullable<HTMLElement>
+			});
 		});
-
-		this.target = element;
 
 		return this.target;
 	}

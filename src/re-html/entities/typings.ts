@@ -41,4 +41,4 @@ export type ReHTMLProps = Partial<
 	} & SynteticProps
 >;
 
-export type DOMNode = HTMLElement | Text;
+export type DOMElement = HTMLElement | Text;

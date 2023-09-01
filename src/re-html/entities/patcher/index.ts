@@ -1,0 +1,1 @@
+export { naivePatcher } from './naive';
